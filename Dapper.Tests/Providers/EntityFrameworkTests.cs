@@ -6,8 +6,13 @@ using Xunit;
 
 namespace Dapper.Tests.Providers
 {
+    public sealed class SystemSqlClientEntityFrameworkTests : EntityFrameworkTests<SystemSqlClientProvider> { }
+#if MSSQLCLIENT
+    public sealed class MicrosoftSqlClientEntityFrameworkTests : EntityFrameworkTests<MicrosoftSqlClientProvider> { }
+#endif
+
     [Collection("TypeHandlerTests")]
-    public class EntityFrameworkTests : TestBase
+    public abstract class EntityFrameworkTests<TProvider> : TestBase<TProvider> where TProvider : DatabaseProvider
     {
         public EntityFrameworkTests()
         {
@@ -17,6 +22,8 @@ namespace Dapper.Tests.Providers
         [Fact]
         public void Issue570_DbGeo_HasValues()
         {
+            SkipIfMsDataClient();
+
             EntityFramework.Handlers.Register();
             const string redmond = "POINT (-122.1215 47.6740)";
             DbGeography point = DbGeography.PointFromText(redmond, DbGeography.DefaultCoordinateSystemId);
@@ -32,6 +39,8 @@ namespace Dapper.Tests.Providers
         [Fact]
         public void Issue22_ExecuteScalar_EntityFramework()
         {
+            SkipIfMsDataClient();
+
             var geo = DbGeography.LineFromText("LINESTRING(-122.360 47.656, -122.343 47.656 )", 4326);
             var geo2 = connection.ExecuteScalar<DbGeography>("select @geo", new { geo });
             Assert.NotNull(geo2);
